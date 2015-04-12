@@ -1,0 +1,68 @@
+#!/bin/bash
+###
+### A thin wrapper around Docker's CLI that simplifies enabling
+### SSH agent forwarding on Docker containers when using Docker
+### on Mac OS
+###
+### Author: Enrique Fernandez <efcasado@gmail.com>
+###===================================================================
+
+
+## Standard prelude
+##====================================================================
+set -e
+set -u
+
+
+## Functions
+##====================================================================
+function check_docker() {
+    if ! which -s docker; then
+        echo "You must install Docker first."
+        exit 1
+    fi
+}
+
+function osx_docker_run() {
+    # Option passed to Docker's binary to enable SSH agent forwarding
+    # on the containers
+    readonly SSH_AGENT_FWDING_OPT="\
+-v \$SSH_AUTH_SOCK:/ssh-agent -e SSH_AUTH_SOCK=/ssh-agent"
+    # Username used to SSH into the boot2docker VM
+    readonly BOOT2DOCKER_USER=docker
+    # IP address of the boot2docker VM
+    readonly BOOT2DOCKER_HOST=$(boot2docker ip)
+    # Public SSH Key used to SSH into the boot2docker VM
+    readonly BOOT2DOCKER_SSH_KEY=$(\
+boot2docker config | grep SSHKey | awk -F'= ' '{print $2}' | tr -d '"')
+
+    DOCKER_RUN_OPTS="${@//--ssh-agent-forwarding/$SSH_AGENT_FWDING_OPT}"
+
+    ssh -t \
+        -A \
+        -i $BOOT2DOCKER_SSH_KEY \
+        $BOOT2DOCKER_USER@$BOOT2DOCKER_HOST \
+        "docker run $DOCKER_RUN_OPTS"
+}
+
+
+## Main
+##====================================================================
+function main() {
+    check_docker
+
+    case $(uname -s) in
+        Darwin)
+            if [ "$1" = "run" ]; then
+                local RUN_ARGS=${*:2}
+                osx_docker_run $RUN_ARGS
+            else
+                docker "$@"
+            fi
+            ;;
+        *)
+            docker "$@"
+    esac
+}
+
+main "$@"
