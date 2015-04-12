@@ -51,18 +51,22 @@ boot2docker config | grep SSHKey | awk -F'= ' '{print $2}' | tr -d '"')
 function main() {
     check_docker
 
-    case $(uname -s) in
-        Darwin)
-            if [ "$1" = "run" ]; then
-                local RUN_ARGS=${*:2}
-                osx_docker_run $RUN_ARGS
-            else
+    if [ "$#" -eq 0 ]; then
+        docker
+    else
+        case $(uname -s) in
+            Darwin)
+                if [ "$1" = "run" ]; then
+                    local RUN_ARGS=${*:2}
+                    osx_docker_run $RUN_ARGS
+                else
+                    docker "$@"
+                fi
+                ;;
+            *)
                 docker "$@"
-            fi
-            ;;
-        *)
-            docker "$@"
-    esac
+        esac
+    fi
 }
 
 main "$@"
