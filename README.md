@@ -4,8 +4,17 @@ crane
 `crane` is a thin wrapper around Docker's CLI that simplifies enabling
 SSH agent forwarding on Docker containers when using Docker on OS X.
 
+
 ### Requirements
 - `boot2docker`
+
+
+### Installation
+
+`make install` will install `crane` on `/usr/local/bin/`. Alternatively,
+you can specify the installation directory using the `INSTALL_DIR`
+environment variable (e.g. `INSTALL_DIR=/usr/bin make install`).
+
 
 ### Usage
 
@@ -31,5 +40,3 @@ Once built, add one of your SSH keys to your local SSH agent (i.e.
 If you now run `ssh-add -l` and
 `crane run --rm --name test --ssh-agent-forwarding crane-test ssh-add -l`,
 you should get the same result.
-
-
